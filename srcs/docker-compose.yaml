@@ -1,0 +1,108 @@
+version: '3'
+
+services:
+  mariadb:
+    # Relative path of dockerfile
+    build: ./requirements/mariadb/
+    container_name: mariadb
+    environment:
+      - HOST_NAME=${HOST_NAME}
+      - HOST_IPV4=${HOST_IPV4}
+      - HOST_IPV6=${HOST_IPV6}
+      - MARIADB_DB=${MARIADB_DB}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PWD=${MARIADB_PWD}
+      - MARIADB_ADMIN_USER=${MARIADB_ADMIN_USER}
+      - MARIADB_ADMIN_PWD=${MARIADB_ADMIN_PWD}
+    # Image name
+    image: mariadb
+    # Shared network
+    networks:
+      - intra
+    # Restart Policy for Keeping Service Active regardless of Condition
+    restart: always
+    # Volume independent to container
+    volumes:
+      - volume-mariadb:/var/lib/mysql
+
+  nginx:
+    build: ./requirements/nginx/
+    container_name: nginx
+    # Servce dependency
+    depends_on:
+      - wordpress
+    # Image Name from Dockerfile
+    image: nginx
+    # Network from Generated One with Docker Compose
+    networks:
+      - network-nginx
+    # Port Forwarding to the Host OS
+    ports:
+      - '443:443'
+    # Restart Policy for Keeping Service Active regardless of Any Condition
+    restart: always
+    # Volume to Be Independent of Container
+    volumes:
+      - volume-wordpress:/var/www/wordpress
+
+  # WordPress Container with Service
+  wordpress:
+    # Dockerfile Location from Current docker-compose.yml
+    build: ./requirements/wordpress/
+    # Container Name as Same as Service Name
+    container_name: wordpress
+    # Dependency of Service
+    depends_on:
+      - mariadb
+    environment:
+      - WP_URL=${WP_URL}
+      - WP_TITLE=${WP_TITLE}
+      - WP_ADMIN_USER=${WP_ADMIN_USER}
+      - WP_ADMIN_PWD=${WP_ADMIN_PWD}
+      - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL}
+      - WP_USER=${WP_USER}
+      - WP_USER_PWD=${WP_USER_PWD}
+      - WP_USER_EMAIL=${WP_USER_EMAIL}
+      - MARIADB_HOST=${MARIADB_HOST}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PWD=${MARIADB_PWD}
+      - MARIADB_DB=${MARIADB_DB}
+    # Image Name from Dockerfile
+    image: wordpress
+    # Network from Generated One with Docker Compose
+    networks:
+      - intra
+    # Restart Policy for Keeping Service Active regardless of Any Condition
+    restart: always
+    # Volume to Be Independent of Container
+    volumes:
+      - volume-wordpress:/var/www/wordpress
+
+networks:
+  intra:
+    # Network Driver among Bridge, Host, None (Containers should be able to communicate)
+    driver: bridge
+    # Network Name (Not to Make srcs Prefix)
+    name: intra
+
+# Volumes for Containers in service
+volumes:
+  volume-mariadb:
+    # Driver Selection (Local, Volume, Temporary File System (tmpfs))
+    driver: local
+    driver_opts:
+      # Binding Path
+      device: ${VOLPATH}/mariadb
+      # Mount Option (Reference from mount Command Manual)
+      o: bind
+      type: volume
+    # Volume Name (Not to Make srcs Prefix)
+    name: volume-mariadb
+
+  volume-wordpress:
+    driver: local
+    driver_opts:
+      device: ${VOLPATH}/wordpress
+      o: bind
+      type: volume
+    name: volume-wordpress
