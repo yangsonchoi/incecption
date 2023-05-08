@@ -17,10 +17,15 @@ RUN         apt-get -y update && \
             mariadb-client 
 
 # Copy Files
-COPY        tools/script.sh /tmp/script.sh
+COPY        tools/entrypoint.sh /tmp/entrypoint.sh
 
 # Permission Control
-RUN         chmod +x /tmp/script.sh
+RUN         chmod +x /tmp/entrypoint.sh
+
+# Open 9000 port
+EXPOSE      9000
 
 # Command to Execute by Entrypoint
-CMD         [ "sh", "-c", "/tmp/script.sh" ]
+ENTRYPOINT  [ "/tmp/entrypoint.sh" ]
+
+CMD         ["php-fpm7.3", "-F"]

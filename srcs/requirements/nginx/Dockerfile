@@ -9,14 +9,16 @@ RUN         apt-get -y update &&    \
             vim
 
 # Copy Files
-COPY        conf/nginx.conf /tmp/nginx.conf
-COPY        tools/script.sh /tmp/script.sh
+COPY        conf/default /tmp/default
+COPY        tools/entrypoint.sh /tmp/entrypoint.sh
 
 # Expose 443 Port
-EXPOSE 443
+EXPOSE      443
 
 # Permission Control
-RUN         chmod +x /tmp/script.sh
+RUN         chmod +x /tmp/entrypoint.sh
+
+ENTRYPOINT  [ "/tmp/entrypoint.sh" ]
 
 # Command to Execute by Entrypoint
-CMD         [ "sh", "-c", "/tmp/script.sh" ]
+CMD         ["nginx", "-g", "daemon off;"]
